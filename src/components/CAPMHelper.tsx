@@ -52,27 +52,26 @@ export function CAPMHelper() {
   return (
     <Collapsible title="CAPM / Discount Rate Helper" defaultOpen={false} badge={badgeContent}>
       <div className="space-y-3">
-        {/* Rf and ERP */}
-        <div className="grid grid-cols-2 gap-3">
-          <NumberInput
-            label="Risk-free Rate (Rf)"
-            unit="%"
-            value={capm.rfRate}
-            onChange={v => dispatch({ type: 'SET_CAPM', payload: { rfRate: v === '' ? 7.0 : v as number } })}
-            step={0.1}
-            tooltip={<div>Use the current 10-year G-Sec yield from <a href="https://www.rbi.org.in" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">RBI.org.in</a>. Default: 7.0%.</div>}
-          />
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Equity Risk Premium (ERP): {capm.erp.toFixed(2)}%
-            </label>
-            <input type="range" min={4} max={20} step={0.25} value={capm.erp}
-              onChange={e => dispatch({ type: 'SET_CAPM', payload: { erp: parseFloat(e.target.value) } })}
-              className="w-full accent-blue-600" />
-            <div className="flex justify-between text-xs text-gray-400"><span>4%</span><span>20%</span></div>
-            <div className="text-xs text-gray-400 mt-0.5">
-              Default from <code>input_data/valuation_config.json</code>. Damodaran India, {BETA_DATA_DATE}.
-            </div>
+        {/* Rf and ERP — stacked for narrow column */}
+        <NumberInput
+          label="Risk-free Rate (Rf)"
+          unit="%"
+          value={capm.rfRate}
+          onChange={v => dispatch({ type: 'SET_CAPM', payload: { rfRate: v === '' ? 7.0 : v as number } })}
+          step={0.1}
+          compact
+          tooltip={<div>Use the current 10-year G-Sec yield from <a href="https://www.rbi.org.in" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">RBI.org.in</a>. Default: 7.0%.</div>}
+        />
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-1">
+            ERP: {capm.erp.toFixed(2)}%
+          </label>
+          <input type="range" min={4} max={20} step={0.25} value={capm.erp}
+            onChange={e => dispatch({ type: 'SET_CAPM', payload: { erp: parseFloat(e.target.value) } })}
+            className="w-full accent-blue-600" />
+          <div className="flex justify-between text-xs text-gray-400 mb-0.5"><span>4%</span><span>20%</span></div>
+          <div className="text-xs text-gray-400">
+            Damodaran India, {BETA_DATA_DATE}. Edit <code>input_data/valuation_config.json</code> to change default.
           </div>
         </div>
 
@@ -154,29 +153,27 @@ export function CAPMHelper() {
             )}
 
             {/* D/E ratio */}
-            <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gray-200">
-              <div>
-                <div className="text-xs text-gray-500 mb-0.5">D/E Ratio</div>
-                <div className="flex items-center gap-1">
-                  <input type="checkbox" checked={capm.useDeOverride}
-                    onChange={e => dispatch({ type: 'SET_CAPM', payload: { useDeOverride: e.target.checked } })}
-                    className="accent-blue-600"
-                  />
-                  <span className="text-xs text-gray-600">Override</span>
-                  {capm.useDeOverride
-                    ? <input type="number" value={capm.debtEquityOverride === '' ? '' : capm.debtEquityOverride} step={0.05}
-                        onChange={e => dispatch({ type: 'SET_CAPM', payload: { debtEquityOverride: e.target.value === '' ? '' : parseFloat(e.target.value) } })}
-                        className="w-20 border border-gray-300 rounded px-1.5 py-0.5 text-xs"
-                        placeholder="e.g. 0.30"
-                      />
-                    : <span className="text-xs font-mono text-blue-600">{derived.deRaw.toFixed(2)} (auto)</span>
-                  }
-                </div>
+            <div className="pt-1 border-t border-gray-200 space-y-1">
+              <div className="text-xs text-gray-500">D/E Ratio</div>
+              <div className="flex items-center gap-1">
+                <input type="checkbox" checked={capm.useDeOverride}
+                  onChange={e => dispatch({ type: 'SET_CAPM', payload: { useDeOverride: e.target.checked } })}
+                  className="accent-blue-600"
+                />
+                <span className="text-xs text-gray-600">Override</span>
+                {capm.useDeOverride
+                  ? <input type="number" value={capm.debtEquityOverride === '' ? '' : capm.debtEquityOverride} step={0.05}
+                      onChange={e => dispatch({ type: 'SET_CAPM', payload: { debtEquityOverride: e.target.value === '' ? '' : parseFloat(e.target.value) } })}
+                      className="w-20 border border-gray-300 rounded px-1.5 py-0.5 text-xs"
+                      placeholder="e.g. 0.30"
+                    />
+                  : <span className="text-xs font-mono text-blue-600">{derived.deRaw.toFixed(2)} (auto)</span>
+                }
               </div>
               {derived.betaUnlevered !== null && derived.beta !== null && (
                 <div className="text-xs text-gray-600 bg-blue-50 rounded p-1.5">
-                  Unlevered β={derived.betaUnlevered.toFixed(3)} → Levered β={derived.beta.toFixed(3)}<br/>
-                  <span className="text-gray-400">Hamada: β_L = β_U × (1 + (1−T) × D/E)</span>
+                  β_U={derived.betaUnlevered.toFixed(3)} → β_L={derived.beta.toFixed(3)}<br/>
+                  <span className="text-gray-400">Hamada: β_L = β_U × (1+(1−T)×D/E)</span>
                 </div>
               )}
             </div>
