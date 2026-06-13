@@ -5,7 +5,7 @@ import { PETab } from './components/tabs/PETab'
 import { RITab } from './components/tabs/RITab'
 import { EVTab } from './components/tabs/EVTab'
 import { ComparisonDashboard } from './components/ComparisonDashboard'
-import { GraduationCap } from 'lucide-react'
+import { GraduationCap, BarChart2, ArrowDown } from 'lucide-react'
 
 const TABS = [
   { id: 'dcf' as const, label: 'DCF' },
@@ -16,6 +16,7 @@ const TABS = [
 
 function AppInner() {
   const { state, dispatch } = useValuation()
+  const hasSymbol = !!state.setup.symbol
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -45,19 +46,24 @@ function AppInner() {
         <StockSetupPanel />
       </div>
 
-      {/* Tab bar */}
+      {/* Tab bar — always visible, tabs dimmed until stock is selected */}
       <div className="bg-white border-b border-gray-200 px-4 sticky top-0 z-20 shadow-[0_3px_10px_rgba(0,0,0,0.07)]">
         <div className="flex overflow-x-auto">
           {TABS.map(tab => {
-            const active = state.activeTab === tab.id
+            const active   = state.activeTab === tab.id
+            const disabled = !hasSymbol
             return (
               <button
                 key={tab.id}
-                onClick={() => dispatch({ type: 'SET_TAB', tab: tab.id })}
+                onClick={() => !disabled && dispatch({ type: 'SET_TAB', tab: tab.id })}
+                disabled={disabled}
+                title={disabled ? 'Select a stock first' : undefined}
                 className={`px-5 py-3 text-sm font-semibold whitespace-nowrap border-b-[3px] transition-all ${
-                  active
-                    ? 'border-blue-600 text-blue-700 bg-blue-50/70 shadow-[inset_0_-2px_6px_rgba(37,99,235,0.08)]'
-                    : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-200'
+                  disabled
+                    ? 'border-transparent text-gray-300 cursor-not-allowed'
+                    : active
+                      ? 'border-blue-600 text-blue-700 bg-blue-50/70 shadow-[inset_0_-2px_6px_rgba(37,99,235,0.08)]'
+                      : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-200'
                 }`}
               >
                 {tab.label}
@@ -69,15 +75,35 @@ function AppInner() {
 
       {/* Tab content */}
       <main className="flex-1 p-4 max-w-7xl mx-auto w-full">
-        {state.activeTab === 'dcf' && <DCFTab />}
-        {state.activeTab === 'pe' && <PETab />}
-        {state.activeTab === 'ri' && <RITab />}
-        {state.activeTab === 'ev' && <EVTab />}
-
-        <ComparisonDashboard />
+        {!hasSymbol ? (
+          /* ── Empty state: no stock selected ── */
+          <div className="flex flex-col items-center justify-center py-24 text-center select-none">
+            <div className="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center mb-5 shadow-inner">
+              <BarChart2 className="text-blue-300" size={36} />
+            </div>
+            <h2 className="text-xl font-bold text-gray-600 mb-2">Choose a stock to begin</h2>
+            <p className="text-sm text-gray-400 max-w-sm mb-6 leading-relaxed">
+              Search for an NSE or BSE stock symbol in the panel above.
+              Once selected, all valuation sections — DCF, PE, Residual Income, and EV/EBITDA — will become active.
+            </p>
+            <div className="flex items-center gap-2 text-xs text-blue-400 animate-bounce">
+              <ArrowDown size={14} />
+              <span>Select a stock in the header above</span>
+              <ArrowDown size={14} />
+            </div>
+          </div>
+        ) : (
+          <>
+            {state.activeTab === 'dcf' && <DCFTab />}
+            {state.activeTab === 'pe'  && <PETab />}
+            {state.activeTab === 'ri'  && <RITab />}
+            {state.activeTab === 'ev'  && <EVTab />}
+            <ComparisonDashboard />
+          </>
+        )}
       </main>
 
-      {/* Persistent compliance footer */}
+      {/* Compliance footer */}
       <footer className="bg-gray-100 border-t border-gray-200 px-4 py-3 text-center text-xs text-gray-500 leading-relaxed">
         This is an educational calculator. Pre-filled data comes from third-party sources (Yahoo Finance) and may be inaccurate
         or delayed — verify before use. All results are computed from numbers you confirm and assumptions you choose.
