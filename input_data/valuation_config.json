@@ -1,0 +1,5 @@
+{
+  "_comment": "Default values for the Intrinsic Value Workbench. Edit manually to update defaults.",
+  "erp": 5.5,
+  "_erp_note": "Equity Risk Premium for India (%). Source: Damodaran, January 2026. Update annually from https://pages.stern.nyu.edu/~adamodar/"
+}

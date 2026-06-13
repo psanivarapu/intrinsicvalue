@@ -4,6 +4,7 @@ import {
   type Field, type FundamentalKey, type Fundamentals, type Exchange,
   emptyField, sampleField, emptyFundamentals, type FundamentalsAPIResponse,
 } from '../types'
+import { DEFAULT_ERP } from '../lib/data/valuationConfig'
 import type { IndustryRow } from '../lib/calculations/capm'
 import type { TerminalTreatment } from '../lib/calculations/residualIncome'
 
@@ -120,7 +121,7 @@ const DEFAULT_STATE: ValuationState = {
     rfRate: 7.0,
     betaMode: 'bottom_up',
     industries: [],
-    erp: 5.5,
+    erp: DEFAULT_ERP,
     debtEquityOverride: '',
     useDeOverride: false,
     costOfDebtOverride: '',
@@ -178,7 +179,7 @@ export function buildSampleState(): ValuationState {
     setup: { symbol: 'SAMPLEDEMO', exchange: 'NSE', isConsolidated: true },
     fundamentals,
     fetch: { ...DEFAULT_STATE.fetch, status: 'idle', histNiCagr: 15 },
-    capm: { ...DEFAULT_STATE.capm, rfRate: 7.0, industries: [{ industryId: 'comp_services', unleveredBeta: 0.87, weight: 100 }], erp: 5.5 },
+    capm: { ...DEFAULT_STATE.capm, rfRate: 7.0, industries: [{ industryId: 'comp_services', unleveredBeta: 0.87, weight: 100 }], erp: DEFAULT_ERP },
     growth: { manualHistCAGR: 15, analystConsensus: 14, selectedGrowth: 15 },
     dcf: { ...DEFAULT_STATE.dcf, stage1Growth: 15, stage2Growth: 10, terminalGrowth: 5 },
     pe: { ...DEFAULT_STATE.pe, epsGrowth: 15, fairPE: 25 },

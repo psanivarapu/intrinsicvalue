@@ -17,6 +17,11 @@ export function CAPMHelper() {
   const waccPct = derived.wacc ? derived.wacc.wacc * 100 : null
   const sanity = rePct !== null && (rePct < 9 || rePct > 18)
 
+  const yahooSuffix = setup.exchange === 'BSE' ? 'BO' : 'NS'
+  const yahooUrl = setup.symbol
+    ? `https://finance.yahoo.com/quote/${setup.symbol}.${yahooSuffix}/`
+    : 'https://finance.yahoo.com/'
+
   function addIndustry(id: string, beta: number) {
     const exists = capm.industries.find(i => i.industryId === id)
     if (exists) return
@@ -37,7 +42,9 @@ export function CAPMHelper() {
   const totalWeight = capm.industries.reduce((s, i) => s + i.weight, 0)
 
   const badgeContent = rePct !== null
-    ? <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${sanity ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>r_e = {rePct.toFixed(1)}%{waccPct ? ` | WACC = ${waccPct.toFixed(1)}%` : ''}</span>
+    ? <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${sanity ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
+        Ke = {rePct.toFixed(1)}%{waccPct ? ` | WACC = ${waccPct.toFixed(1)}%` : ''}
+      </span>
     : undefined
 
   const screenerLink = screenerUrl(setup.symbol || 'SYMBOL', setup.isConsolidated, 'analysis')
@@ -56,15 +63,20 @@ export function CAPMHelper() {
             tooltip={<div>Use the current 10-year G-Sec yield from <a href="https://www.rbi.org.in" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">RBI.org.in</a>. Default: 7.0%.</div>}
           />
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">ERP: {capm.erp.toFixed(2)}%</label>
-            <input type="range" min={4} max={8} step={0.25} value={capm.erp}
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Equity Risk Premium (ERP): {capm.erp.toFixed(2)}%
+            </label>
+            <input type="range" min={4} max={20} step={0.25} value={capm.erp}
               onChange={e => dispatch({ type: 'SET_CAPM', payload: { erp: parseFloat(e.target.value) } })}
               className="w-full accent-blue-600" />
-            <div className="flex justify-between text-xs text-gray-400"><span>4%</span><span>8%</span></div>
+            <div className="flex justify-between text-xs text-gray-400"><span>4%</span><span>20%</span></div>
+            <div className="text-xs text-gray-400 mt-0.5">
+              Default from <code>input_data/valuation_config.json</code>. Damodaran India, {BETA_DATA_DATE}.
+            </div>
           </div>
         </div>
 
-        {/* Beta mode */}
+        {/* Beta mode toggle */}
         <div className="flex gap-2 text-xs">
           <span className="text-gray-600 self-center font-medium">Beta:</span>
           {(['bottom_up', 'direct'] as const).map(m => (
@@ -82,7 +94,7 @@ export function CAPMHelper() {
           <div className="bg-gray-50 rounded p-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-gray-600">
-                Industry betas (Damodaran India, {BETA_DATA_DATE})
+                Industry Betas (Damodaran India, {BETA_DATA_DATE})
               </span>
               <a href="https://pages.stern.nyu.edu/~adamodar/" target="_blank" rel="noopener noreferrer"
                 className="text-xs text-blue-600 hover:underline flex items-center gap-0.5">
@@ -144,7 +156,7 @@ export function CAPMHelper() {
             {/* D/E ratio */}
             <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gray-200">
               <div>
-                <div className="text-xs text-gray-500 mb-0.5">D/E ratio</div>
+                <div className="text-xs text-gray-500 mb-0.5">D/E Ratio</div>
                 <div className="flex items-center gap-1">
                   <input type="checkbox" checked={capm.useDeOverride}
                     onChange={e => dispatch({ type: 'SET_CAPM', payload: { useDeOverride: e.target.checked } })}
@@ -163,7 +175,7 @@ export function CAPMHelper() {
               </div>
               {derived.betaUnlevered !== null && derived.beta !== null && (
                 <div className="text-xs text-gray-600 bg-blue-50 rounded p-1.5">
-                  β_U={derived.betaUnlevered.toFixed(3)} → β_L={derived.beta.toFixed(3)}<br/>
+                  Unlevered β={derived.betaUnlevered.toFixed(3)} → Levered β={derived.beta.toFixed(3)}<br/>
                   <span className="text-gray-400">Hamada: β_L = β_U × (1 + (1−T) × D/E)</span>
                 </div>
               )}
@@ -173,24 +185,44 @@ export function CAPMHelper() {
 
         {/* Direct beta */}
         {capm.betaMode === 'direct' && (
-          <NumberInput
-            label="Beta (β)"
-            value={fundamentals.beta.value}
-            onChange={v => dispatch({ type: 'SET_FIELD', key: 'beta', value: v })}
-            source={fundamentals.beta.source}
-            asOf={fundamentals.beta.asOf}
-            screenerHref={screenerUrl(setup.symbol || 'SYMBOL', setup.isConsolidated, 'analysis')}
-            placeholder="e.g. 1.1"
-            step={0.05}
-            tooltip={<div>Also shown on the screener.in company page. <a href={screenerLink} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Open screener.in →</a></div>}
-          />
+          <div className="space-y-1.5">
+            <NumberInput
+              label="Beta (β)"
+              value={fundamentals.beta.value}
+              onChange={v => dispatch({ type: 'SET_FIELD', key: 'beta', value: v })}
+              source={fundamentals.beta.source}
+              asOf={fundamentals.beta.asOf}
+              screenerHref={screenerUrl(setup.symbol || 'SYMBOL', setup.isConsolidated, 'analysis')}
+              placeholder="e.g. 1.1"
+              step={0.05}
+              tooltip={<div>
+                On Yahoo Finance, scroll below the price chart on the quote page — the field labelled
+                <strong> "Beta (5Y Monthly)"</strong> is the value to enter here.
+                <br/>
+                <a href={yahooUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                  Open Yahoo Finance →
+                </a>
+              </div>}
+            />
+            <div className="text-xs text-gray-500 flex items-center gap-1">
+              <a href={yahooUrl} target="_blank" rel="noopener noreferrer"
+                className="text-blue-600 hover:underline flex items-center gap-0.5">
+                {setup.symbol ? `Yahoo Finance: ${setup.symbol}.${yahooSuffix}` : 'Open Yahoo Finance'}
+                <ExternalLink size={10} />
+              </a>
+              <span className="text-gray-400">— look for "Beta (5Y Monthly)" below the chart</span>
+            </div>
+          </div>
         )}
 
-        {/* Live r_e result */}
+        {/* Live Cost of Equity result */}
         {rePct !== null && (
           <div className={`p-2 rounded text-sm ${sanity ? 'bg-amber-50 border border-amber-200' : 'bg-blue-50 border border-blue-100'}`}>
             <div className="font-semibold text-gray-800">
-              r_e = {capm.rfRate}% + {derived.beta?.toFixed(3) || '?'} × {capm.erp}% = <span className={sanity ? 'text-amber-700' : 'text-blue-700'}>{rePct.toFixed(2)}%</span>
+              Cost of Equity = {capm.rfRate}% + {derived.beta?.toFixed(3) || '?'} × {capm.erp}% = <span className={sanity ? 'text-amber-700' : 'text-blue-700'}>{rePct.toFixed(2)}%</span>
+            </div>
+            <div className="text-xs text-gray-500 mt-0.5">
+              Rf ({capm.rfRate}%) + Levered β × ERP ({capm.erp}%)
             </div>
             {sanity && (
               <div className="text-xs text-amber-700 mt-0.5">
@@ -205,20 +237,20 @@ export function CAPMHelper() {
           <div className="bg-gray-50 rounded p-2.5 text-xs">
             <div className="font-semibold text-gray-700 mb-1">WACC</div>
             <div className="grid grid-cols-3 gap-x-3 text-gray-600">
-              <div>E/V = {(derived.wacc.equityWeight * 100).toFixed(1)}%</div>
-              <div>D/V = {(derived.wacc.debtWeight * 100).toFixed(1)}%</div>
-              <div>r_d (after-tax) = {(derived.wacc.afterTaxCostOfDebt * 100).toFixed(1)}%</div>
+              <div>Equity Weight (E/V) = {(derived.wacc.equityWeight * 100).toFixed(1)}%</div>
+              <div>Debt Weight (D/V) = {(derived.wacc.debtWeight * 100).toFixed(1)}%</div>
+              <div>Cost of Debt (after-tax) = {(derived.wacc.afterTaxCostOfDebt * 100).toFixed(1)}%</div>
             </div>
             <div className="mt-1 font-semibold text-blue-700">
               WACC = {waccPct?.toFixed(2)}%
-              <span className="ml-1 font-normal text-gray-500">(used for FCFF mode)</span>
+              <span className="ml-1 font-normal text-gray-500">(used as discount rate in FCFF mode)</span>
             </div>
             <div className="flex items-center gap-1 mt-1">
               <input type="checkbox" checked={capm.useCodOverride}
                 onChange={e => dispatch({ type: 'SET_CAPM', payload: { useCodOverride: e.target.checked } })}
                 className="accent-blue-600"
               />
-              <span className="text-gray-600">Override r_d</span>
+              <span className="text-gray-600">Override Cost of Debt</span>
               {capm.useCodOverride && (
                 <input type="number" value={capm.costOfDebtOverride === '' ? '' : capm.costOfDebtOverride}
                   onChange={e => dispatch({ type: 'SET_CAPM', payload: { costOfDebtOverride: e.target.value === '' ? '' : parseFloat(e.target.value) } })}
