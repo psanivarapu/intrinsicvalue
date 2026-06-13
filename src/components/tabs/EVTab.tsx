@@ -33,129 +33,18 @@ export function EVTab() {
   const bs = screenerUrl(setup.symbol || 'SYMBOL', setup.isConsolidated, 'balance-sheet')
 
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-3 gap-3 items-start">
 
-      {/* ── Warning row (no top helpers for EV) ── */}
-      <div className="p-2 bg-amber-50 border border-amber-100 rounded-lg text-xs text-amber-800">
+      {/* ── Row 1 Col 1+2: Warning banner ── */}
+      <div className="col-span-2 p-2 bg-amber-50 border border-amber-100 rounded-lg text-xs text-amber-800">
         ⚠ EV/EBITDA is <strong>not meaningful for banks and NBFCs</strong> — use the Residual Income tab for financial businesses.
       </div>
 
-      {/* ── Main: Inputs + Result ── */}
-      <div className="grid grid-cols-3 gap-4 items-start">
-
-        {/* Inputs panel */}
-        <div className="col-span-2 border border-gray-200 rounded-lg p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-sm text-gray-700">EV/EBITDA Inputs</h3>
-            <ToggleSwitch
-              checked={isAdv}
-              onChange={v => dispatch({ type: 'SET_EV', payload: { mode: v ? 'advanced' : 'simple' } })}
-            />
-          </div>
-
-          {/* ── Simple mode ── */}
-          {!isAdv && (
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                <NumberInput
-                  label="EBITDA" unit="₹ Cr"
-                  value={fundamentals.ebitda.value}
-                  onChange={v => dispatch({ type: 'SET_FIELD', key: 'ebitda', value: v })}
-                  source={fundamentals.ebitda.source} asOf={fundamentals.ebitda.asOf} screenerHref={pl}
-                  tooltip={<div>Screener.in → P&L → "Operating Profit" row (≈ EBITDA).</div>}
-                  compact
-                />
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Fair EV/EBITDA Multiple</label>
-                  <input
-                    type="number"
-                    value={ev.multiple === '' ? '' : ev.multiple}
-                    onChange={e => dispatch({ type: 'SET_EV', payload: { multiple: e.target.value === '' ? '' : parseFloat(e.target.value) } })}
-                    placeholder="Enter multiple"
-                    step={0.5}
-                    className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  />
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {SECTOR_RANGES.map(s => (
-                  <span key={s.sector} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
-                    {s.sector}: {s.range}
-                  </span>
-                ))}
-              </div>
-              {shares > 0 ? (
-                <p className="text-xs text-gray-500">Using {shares} Cr shares, {fmtCr(totalDebt)} debt, {fmtCr(cash)} cash from fundamentals.</p>
-              ) : (
-                <p className="text-xs text-amber-600">⚠ Enter shares outstanding in the Setup Panel above.</p>
-              )}
-              {!canCompute && (
-                <p className="text-xs text-gray-400">Enter EBITDA, multiple, and ensure shares are filled.</p>
-              )}
-            </div>
-          )}
-
-          {/* ── Advanced mode ── */}
-          {isAdv && (
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                <NumberInput
-                  label="EBITDA" unit="₹ Cr"
-                  value={fundamentals.ebitda.value}
-                  onChange={v => dispatch({ type: 'SET_FIELD', key: 'ebitda', value: v })}
-                  source={fundamentals.ebitda.source} asOf={fundamentals.ebitda.asOf} screenerHref={pl}
-                  tooltip={<div>Screener.in → P&L → "Operating Profit" row (≈ EBITDA).</div>}
-                  compact
-                />
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Fair EV/EBITDA Multiple</label>
-                  <div className="flex flex-wrap gap-1 mb-1">
-                    {SECTOR_RANGES.map(s => (
-                      <span key={s.sector} className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
-                        {s.sector}: {s.range}
-                      </span>
-                    ))}
-                  </div>
-                  <input
-                    type="number"
-                    value={ev.multiple === '' ? '' : ev.multiple}
-                    onChange={e => dispatch({ type: 'SET_EV', payload: { multiple: e.target.value === '' ? '' : parseFloat(e.target.value) } })}
-                    placeholder="Enter multiple"
-                    step={0.5}
-                    className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <NumberInput
-                  label="Total Debt" unit="₹ Cr"
-                  value={fundamentals.totalDebt.value}
-                  onChange={v => dispatch({ type: 'SET_FIELD', key: 'totalDebt', value: v })}
-                  source={fundamentals.totalDebt.source} asOf={fundamentals.totalDebt.asOf} screenerHref={bs} compact
-                />
-                <NumberInput
-                  label="Cash & Equivalents" unit="₹ Cr"
-                  value={fundamentals.cashAndEquivalents.value}
-                  onChange={v => dispatch({ type: 'SET_FIELD', key: 'cashAndEquivalents', value: v })}
-                  source={fundamentals.cashAndEquivalents.source} asOf={fundamentals.cashAndEquivalents.asOf} screenerHref={bs} compact
-                />
-              </div>
-              {shares > 0 ? (
-                <p className="text-xs text-gray-500">Using {shares} Cr shares from fundamentals.</p>
-              ) : (
-                <p className="text-xs text-amber-600">⚠ Enter shares outstanding in the Setup Panel above.</p>
-              )}
-              {!canCompute && (
-                <p className="text-xs text-gray-400">Enter EBITDA, multiple, and ensure shares are filled.</p>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* ── Result card ── */}
-        <div className="col-span-1">
+      {/* ── Col 3 rows 1+2: Result card ── */}
+      <div className="row-span-2">
+        <div className="sticky top-3">
           {result ? (
-            <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-4 sticky top-4">
+            <div className="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-200 rounded-lg p-4">
               <div className="text-xs font-semibold text-orange-600 uppercase tracking-wide mb-1">EV/EBITDA Value</div>
               <div className="text-3xl font-bold text-gray-900">{fmtRs0(result.intrinsicPerShare)}</div>
               {cmp > 0 && (
@@ -181,11 +70,120 @@ export function EVTab() {
               )}
             </div>
           ) : (
-            <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-400 text-sm sticky top-4">
+            <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-400 text-sm">
               Fill EBITDA, multiple, and shares to see your estimate
             </div>
           )}
         </div>
+      </div>
+
+      {/* ── Row 2 Col 1+2: EV Inputs ── */}
+      <div className="col-span-2 border border-gray-200 rounded-lg p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-sm text-gray-700">EV/EBITDA Inputs</h3>
+          <ToggleSwitch
+            checked={isAdv}
+            onChange={v => dispatch({ type: 'SET_EV', payload: { mode: v ? 'advanced' : 'simple' } })}
+          />
+        </div>
+
+        {/* ── Simple mode ── */}
+        {!isAdv && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <NumberInput
+                label="EBITDA" unit="₹ Cr"
+                value={fundamentals.ebitda.value}
+                onChange={v => dispatch({ type: 'SET_FIELD', key: 'ebitda', value: v })}
+                source={fundamentals.ebitda.source} asOf={fundamentals.ebitda.asOf} screenerHref={pl}
+                tooltip={<div>Screener.in → P&L → "Operating Profit" row (≈ EBITDA).</div>}
+                compact
+              />
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Fair EV/EBITDA Multiple</label>
+                <input
+                  type="number"
+                  value={ev.multiple === '' ? '' : ev.multiple}
+                  onChange={e => dispatch({ type: 'SET_EV', payload: { multiple: e.target.value === '' ? '' : parseFloat(e.target.value) } })}
+                  placeholder="Enter multiple"
+                  step={0.5}
+                  className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"
+                />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {SECTOR_RANGES.map(s => (
+                <span key={s.sector} className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                  {s.sector}: {s.range}
+                </span>
+              ))}
+            </div>
+            {shares > 0 ? (
+              <p className="text-xs text-gray-500">Using {shares} Cr shares, {fmtCr(totalDebt)} debt, {fmtCr(cash)} cash from fundamentals.</p>
+            ) : (
+              <p className="text-xs text-amber-600">⚠ Enter shares outstanding in the Setup Panel above.</p>
+            )}
+            {!canCompute && (
+              <p className="text-xs text-gray-400">Enter EBITDA, multiple, and ensure shares are filled.</p>
+            )}
+          </div>
+        )}
+
+        {/* ── Advanced mode ── */}
+        {isAdv && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <NumberInput
+                label="EBITDA" unit="₹ Cr"
+                value={fundamentals.ebitda.value}
+                onChange={v => dispatch({ type: 'SET_FIELD', key: 'ebitda', value: v })}
+                source={fundamentals.ebitda.source} asOf={fundamentals.ebitda.asOf} screenerHref={pl}
+                tooltip={<div>Screener.in → P&L → "Operating Profit" row (≈ EBITDA).</div>}
+                compact
+              />
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Fair EV/EBITDA Multiple</label>
+                <div className="flex flex-wrap gap-1 mb-1">
+                  {SECTOR_RANGES.map(s => (
+                    <span key={s.sector} className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                      {s.sector}: {s.range}
+                    </span>
+                  ))}
+                </div>
+                <input
+                  type="number"
+                  value={ev.multiple === '' ? '' : ev.multiple}
+                  onChange={e => dispatch({ type: 'SET_EV', payload: { multiple: e.target.value === '' ? '' : parseFloat(e.target.value) } })}
+                  placeholder="Enter multiple"
+                  step={0.5}
+                  className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <NumberInput
+                label="Total Debt" unit="₹ Cr"
+                value={fundamentals.totalDebt.value}
+                onChange={v => dispatch({ type: 'SET_FIELD', key: 'totalDebt', value: v })}
+                source={fundamentals.totalDebt.source} asOf={fundamentals.totalDebt.asOf} screenerHref={bs} compact
+              />
+              <NumberInput
+                label="Cash & Equivalents" unit="₹ Cr"
+                value={fundamentals.cashAndEquivalents.value}
+                onChange={v => dispatch({ type: 'SET_FIELD', key: 'cashAndEquivalents', value: v })}
+                source={fundamentals.cashAndEquivalents.source} asOf={fundamentals.cashAndEquivalents.asOf} screenerHref={bs} compact
+              />
+            </div>
+            {shares > 0 ? (
+              <p className="text-xs text-gray-500">Using {shares} Cr shares from fundamentals.</p>
+            ) : (
+              <p className="text-xs text-amber-600">⚠ Enter shares outstanding in the Setup Panel above.</p>
+            )}
+            {!canCompute && (
+              <p className="text-xs text-gray-400">Enter EBITDA, multiple, and ensure shares are filled.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

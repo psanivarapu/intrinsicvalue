@@ -32,164 +32,25 @@ export function RITab() {
   const bs = screenerUrl(setup.symbol || 'SYMBOL', setup.isConsolidated, 'balance-sheet')
 
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-3 gap-3 items-start">
 
-      {/* ── Row 1: CAPM + info ── */}
-      <div className="grid grid-cols-2 gap-3">
-        <CAPMHelper />
-        <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-700 flex items-start gap-2">
-          <span className="text-base leading-none mt-0.5">ℹ</span>
-          <div>
-            <strong>Best suited to:</strong> banks, NBFCs, insurers, and asset-heavy businesses where earnings closely track book value.
-            <div className="mt-1 text-blue-500">Uses cost of equity from the CAPM Helper (left). Not WACC.</div>
-          </div>
+      {/* ── Row 1 Col 1: CAPM Helper ── */}
+      <CAPMHelper />
+
+      {/* ── Row 1 Col 2: Info box ── */}
+      <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-700 flex items-start gap-2">
+        <span className="text-base leading-none mt-0.5">ℹ</span>
+        <div>
+          <strong>Best suited to:</strong> banks, NBFCs, insurers, and asset-heavy businesses where earnings closely track book value.
+          <div className="mt-1 text-blue-500">Uses cost of equity from the CAPM Helper (left). Not WACC.</div>
         </div>
       </div>
 
-      {/* ── Row 2: Inputs + Result ── */}
-      <div className="grid grid-cols-3 gap-4 items-start">
-
-        {/* Inputs panel */}
-        <div className="col-span-2 border border-gray-200 rounded-lg p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-semibold text-sm text-gray-700">Residual Income Inputs</h3>
-            <ToggleSwitch
-              checked={isAdv}
-              onChange={v => dispatch({ type: 'SET_RI', payload: { mode: v ? 'advanced' : 'simple' } })}
-            />
-          </div>
-
-          {/* ── Simple mode ── */}
-          {!isAdv && (
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                <NumberInput
-                  label="Book Value / Share" unit="₹"
-                  value={fundamentals.bookValuePerShare.value}
-                  onChange={v => dispatch({ type: 'SET_FIELD', key: 'bookValuePerShare', value: v })}
-                  source={fundamentals.bookValuePerShare.source} asOf={fundamentals.bookValuePerShare.asOf} screenerHref={bs}
-                  tooltip={<div>Screener.in → header ratios → "Book Value".</div>}
-                  compact
-                />
-                <NumberInput
-                  label="Return on Equity (ROE)" unit="%"
-                  value={fundamentals.roe.value}
-                  onChange={v => dispatch({ type: 'SET_FIELD', key: 'roe', value: v })}
-                  source={fundamentals.roe.source} asOf={fundamentals.roe.asOf} screenerHref={bs}
-                  step={0.5}
-                  tooltip={<div>Screener.in → header ratios → "Return on equity".</div>}
-                  compact
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <NumberInput
-                  label="Dividend Payout" unit="%"
-                  value={fundamentals.payoutRatio.value}
-                  onChange={v => dispatch({ type: 'SET_FIELD', key: 'payoutRatio', value: v })}
-                  source={fundamentals.payoutRatio.source} asOf={fundamentals.payoutRatio.asOf} screenerHref={pl}
-                  step={1}
-                  tooltip={<div>Screener.in → P&L → "Dividend Payout %" row.</div>}
-                  compact
-                />
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Terminal Treatment</label>
-                  <select
-                    value={ri.terminalTreatment}
-                    onChange={e => dispatch({ type: 'SET_RI', payload: { terminalTreatment: e.target.value as TerminalTreatment } })}
-                    className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  >
-                    <option value="linear_fade">Linear fade to zero (yrs 11–15)</option>
-                    <option value="perpetuity">Perpetuity at year-10 RI level</option>
-                    <option value="abrupt_stop">Abrupt stop after year 10</option>
-                  </select>
-                </div>
-              </div>
-              {result?.roeLtR && (
-                <div className="p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
-                  ℹ ROE ({roe}%) ≤ cost of equity ({fmtPct(r * 100)}) — residual income is negative; intrinsic value sits below book value. Valid result.
-                </div>
-              )}
-              {!canCompute && (
-                <p className="text-xs text-gray-400">Enter Book Value, ROE, and Payout Ratio to compute.</p>
-              )}
-            </div>
-          )}
-
-          {/* ── Advanced mode ── */}
-          {isAdv && (
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                <NumberInput
-                  label="Book Value / Share" unit="₹"
-                  value={fundamentals.bookValuePerShare.value}
-                  onChange={v => dispatch({ type: 'SET_FIELD', key: 'bookValuePerShare', value: v })}
-                  source={fundamentals.bookValuePerShare.source} asOf={fundamentals.bookValuePerShare.asOf} screenerHref={bs}
-                  tooltip={<div>Screener.in → header ratios → "Book Value".</div>}
-                  compact
-                />
-                <NumberInput
-                  label="Return on Equity (ROE)" unit="%"
-                  value={fundamentals.roe.value}
-                  onChange={v => dispatch({ type: 'SET_FIELD', key: 'roe', value: v })}
-                  source={fundamentals.roe.source} asOf={fundamentals.roe.asOf} screenerHref={bs}
-                  step={0.5}
-                  tooltip={<div>Screener.in → header ratios → "Return on equity".</div>}
-                  compact
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <NumberInput
-                  label="Dividend Payout" unit="%"
-                  value={fundamentals.payoutRatio.value}
-                  onChange={v => dispatch({ type: 'SET_FIELD', key: 'payoutRatio', value: v })}
-                  source={fundamentals.payoutRatio.source} asOf={fundamentals.payoutRatio.asOf} screenerHref={pl}
-                  step={1}
-                  tooltip={<div>Screener.in → P&L → "Dividend Payout %" row.</div>}
-                  compact
-                />
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Terminal Treatment</label>
-                  <select
-                    value={ri.terminalTreatment}
-                    onChange={e => dispatch({ type: 'SET_RI', payload: { terminalTreatment: e.target.value as TerminalTreatment } })}
-                    className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"
-                  >
-                    <option value="linear_fade">Linear fade to zero (yrs 11–15)</option>
-                    <option value="perpetuity">Perpetuity at year-10 RI level</option>
-                    <option value="abrupt_stop">Abrupt stop after year 10</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="ri-rate-override" checked={ri.useRateOverride}
-                  onChange={e => dispatch({ type: 'SET_RI', payload: { useRateOverride: e.target.checked } })}
-                  className="accent-blue-600"
-                />
-                <label htmlFor="ri-rate-override" className="text-xs text-gray-600">Override cost of equity</label>
-                {ri.useRateOverride && (
-                  <input type="number" value={ri.discountRateOverride === '' ? '' : ri.discountRateOverride}
-                    onChange={e => dispatch({ type: 'SET_RI', payload: { discountRateOverride: e.target.value === '' ? '' : parseFloat(e.target.value) } })}
-                    placeholder="%" step={0.25}
-                    className="w-20 border border-gray-300 rounded px-2 py-1 text-xs"
-                  />
-                )}
-              </div>
-              {result?.roeLtR && (
-                <div className="p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
-                  ℹ ROE ({roe}%) ≤ cost of equity ({fmtPct(r * 100)}) — residual income is negative; intrinsic value sits below book value. Valid result.
-                </div>
-              )}
-              {!canCompute && (
-                <p className="text-xs text-gray-400">Enter Book Value, ROE, and Payout Ratio to compute.</p>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* ── Result card ── */}
-        <div className="col-span-1">
+      {/* ── Col 3 rows 1+2: Result card ── */}
+      <div className="row-span-2">
+        <div className="sticky top-3">
           {result ? (
-            <div className="bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 rounded-lg p-4 sticky top-4">
+            <div className="bg-gradient-to-br from-purple-50 to-violet-50 border border-purple-200 rounded-lg p-4">
               <div className="text-xs font-semibold text-purple-600 uppercase tracking-wide mb-1">Residual Income Value</div>
               <div className="text-3xl font-bold text-gray-900">{fmtRs0(result.intrinsicPerShare)}</div>
               {cmp > 0 && (
@@ -238,11 +99,148 @@ export function RITab() {
               )}
             </div>
           ) : (
-            <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-400 text-sm sticky top-4">
+            <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-6 text-center text-gray-400 text-sm">
               Fill Book Value, ROE, and Payout to see your estimate
             </div>
           )}
         </div>
+      </div>
+
+      {/* ── Row 2 Col 1+2: RI Inputs ── */}
+      <div className="col-span-2 border border-gray-200 rounded-lg p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-sm text-gray-700">Residual Income Inputs</h3>
+          <ToggleSwitch
+            checked={isAdv}
+            onChange={v => dispatch({ type: 'SET_RI', payload: { mode: v ? 'advanced' : 'simple' } })}
+          />
+        </div>
+
+        {/* ── Simple mode ── */}
+        {!isAdv && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <NumberInput
+                label="Book Value / Share" unit="₹"
+                value={fundamentals.bookValuePerShare.value}
+                onChange={v => dispatch({ type: 'SET_FIELD', key: 'bookValuePerShare', value: v })}
+                source={fundamentals.bookValuePerShare.source} asOf={fundamentals.bookValuePerShare.asOf} screenerHref={bs}
+                tooltip={<div>Screener.in → header ratios → "Book Value".</div>}
+                compact
+              />
+              <NumberInput
+                label="Return on Equity (ROE)" unit="%"
+                value={fundamentals.roe.value}
+                onChange={v => dispatch({ type: 'SET_FIELD', key: 'roe', value: v })}
+                source={fundamentals.roe.source} asOf={fundamentals.roe.asOf} screenerHref={bs}
+                step={0.5}
+                tooltip={<div>Screener.in → header ratios → "Return on equity".</div>}
+                compact
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <NumberInput
+                label="Dividend Payout" unit="%"
+                value={fundamentals.payoutRatio.value}
+                onChange={v => dispatch({ type: 'SET_FIELD', key: 'payoutRatio', value: v })}
+                source={fundamentals.payoutRatio.source} asOf={fundamentals.payoutRatio.asOf} screenerHref={pl}
+                step={1}
+                tooltip={<div>Screener.in → P&L → "Dividend Payout %" row.</div>}
+                compact
+              />
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Terminal Treatment</label>
+                <select
+                  value={ri.terminalTreatment}
+                  onChange={e => dispatch({ type: 'SET_RI', payload: { terminalTreatment: e.target.value as TerminalTreatment } })}
+                  className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"
+                >
+                  <option value="linear_fade">Linear fade to zero (yrs 11–15)</option>
+                  <option value="perpetuity">Perpetuity at year-10 RI level</option>
+                  <option value="abrupt_stop">Abrupt stop after year 10</option>
+                </select>
+              </div>
+            </div>
+            {result?.roeLtR && (
+              <div className="p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+                ℹ ROE ({roe}%) ≤ cost of equity ({fmtPct(r * 100)}) — residual income is negative; intrinsic value sits below book value. Valid result.
+              </div>
+            )}
+            {!canCompute && (
+              <p className="text-xs text-gray-400">Enter Book Value, ROE, and Payout Ratio to compute.</p>
+            )}
+          </div>
+        )}
+
+        {/* ── Advanced mode ── */}
+        {isAdv && (
+          <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              <NumberInput
+                label="Book Value / Share" unit="₹"
+                value={fundamentals.bookValuePerShare.value}
+                onChange={v => dispatch({ type: 'SET_FIELD', key: 'bookValuePerShare', value: v })}
+                source={fundamentals.bookValuePerShare.source} asOf={fundamentals.bookValuePerShare.asOf} screenerHref={bs}
+                tooltip={<div>Screener.in → header ratios → "Book Value".</div>}
+                compact
+              />
+              <NumberInput
+                label="Return on Equity (ROE)" unit="%"
+                value={fundamentals.roe.value}
+                onChange={v => dispatch({ type: 'SET_FIELD', key: 'roe', value: v })}
+                source={fundamentals.roe.source} asOf={fundamentals.roe.asOf} screenerHref={bs}
+                step={0.5}
+                tooltip={<div>Screener.in → header ratios → "Return on equity".</div>}
+                compact
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <NumberInput
+                label="Dividend Payout" unit="%"
+                value={fundamentals.payoutRatio.value}
+                onChange={v => dispatch({ type: 'SET_FIELD', key: 'payoutRatio', value: v })}
+                source={fundamentals.payoutRatio.source} asOf={fundamentals.payoutRatio.asOf} screenerHref={pl}
+                step={1}
+                tooltip={<div>Screener.in → P&L → "Dividend Payout %" row.</div>}
+                compact
+              />
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Terminal Treatment</label>
+                <select
+                  value={ri.terminalTreatment}
+                  onChange={e => dispatch({ type: 'SET_RI', payload: { terminalTreatment: e.target.value as TerminalTreatment } })}
+                  className="w-full border border-gray-300 rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-300"
+                >
+                  <option value="linear_fade">Linear fade to zero (yrs 11–15)</option>
+                  <option value="perpetuity">Perpetuity at year-10 RI level</option>
+                  <option value="abrupt_stop">Abrupt stop after year 10</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="ri-rate-override" checked={ri.useRateOverride}
+                onChange={e => dispatch({ type: 'SET_RI', payload: { useRateOverride: e.target.checked } })}
+                className="accent-blue-600"
+              />
+              <label htmlFor="ri-rate-override" className="text-xs text-gray-600">Override cost of equity</label>
+              {ri.useRateOverride && (
+                <input type="number" value={ri.discountRateOverride === '' ? '' : ri.discountRateOverride}
+                  onChange={e => dispatch({ type: 'SET_RI', payload: { discountRateOverride: e.target.value === '' ? '' : parseFloat(e.target.value) } })}
+                  placeholder="%" step={0.25}
+                  className="w-20 border border-gray-300 rounded px-2 py-1 text-xs"
+                />
+              )}
+            </div>
+            {result?.roeLtR && (
+              <div className="p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+                ℹ ROE ({roe}%) ≤ cost of equity ({fmtPct(r * 100)}) — residual income is negative; intrinsic value sits below book value. Valid result.
+              </div>
+            )}
+            {!canCompute && (
+              <p className="text-xs text-gray-400">Enter Book Value, ROE, and Payout Ratio to compute.</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
